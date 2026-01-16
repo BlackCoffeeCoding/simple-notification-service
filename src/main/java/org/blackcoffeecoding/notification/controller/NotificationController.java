@@ -1,6 +1,6 @@
 package org.blackcoffeecoding.notification.controller;
 
-import org.blackcoffeecoding.notification.handler.NotificationWebSocketHandler;
+import org.blackcoffeecoding.notification.handler.NotificationHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,38 +10,32 @@ import java.util.Map;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-    private final NotificationWebSocketHandler handler;
+    private final NotificationHandler handler;
 
-    public NotificationController(NotificationWebSocketHandler handler) {
+    public NotificationController(NotificationHandler handler) {
         this.handler = handler;
     }
 
-    // Общая рассылка (старое)
+    /**
+     * Ручная отправка уведомления всем (для тестов)
+     * POST http://localhost:8083/api/notifications/broadcast
+     * Body: "Привет!"
+     */
     @PostMapping("/broadcast")
-    public ResponseEntity<Map<String, Object>> broadcast(@RequestBody String message) {
-        int count = handler.broadcast(message);
-        return ResponseEntity.ok(Map.of("sentTo", count));
+    public ResponseEntity<String> broadcast(@RequestBody String message) {
+        handler.broadcast(message);
+        return ResponseEntity.ok("Сообщение отправлено всем активным клиентам");
     }
 
-    // ЗАДАНИЕ 2: Личное сообщение
-    // POST http://localhost:8086/api/notifications/private
-    // Body (JSON): { "userId": "user1", "message": "Секретно!" }
-    @PostMapping("/private")
-    public ResponseEntity<Map<String, Object>> sendPrivate(@RequestBody Map<String, String> payload) {
-        String userId = payload.get("userId");
-        String message = payload.get("message");
-
-        boolean success = handler.sendPrivateMessage(userId, message);
-
-        if (success) {
-            return ResponseEntity.ok(Map.of("status", "sent", "to", userId));
-        } else {
-            return ResponseEntity.status(404).body(Map.of("status", "error", "reason", "User not found or offline"));
-        }
-    }
-
+    /**
+     * Статистика подключений
+     * GET http://localhost:8083/api/notifications/stats
+     */
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> stats() {
-        return ResponseEntity.ok(Map.of("activeUsers", handler.getActiveConnections()));
+        return ResponseEntity.ok(Map.of(
+                "activeConnections", handler.getActiveConnections(),
+                "service", "Notification Service"
+        ));
     }
 }
