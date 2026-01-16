@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Personal Demo</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-top: 10px; }
+        .log { color: gray; font-size: 0.8em; }
+        .msg { color: blue; font-weight: bold; }
+        .private { color: crimson; font-weight: bold; border: 1px solid red; padding: 2px; }
+        #status { font-weight: bold; }
+        .controls { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<h2>Private Notifications (Port 8086)</h2>
+
+<div class="controls">
+    <label>Представьтесь (UserID): <input type="text" id="userIdInput" value="user1"></label>
+    <button onclick="connect()">Подключиться</button>
+    <button onclick="disconnect()">Отключиться</button>
+</div>
+
+<div id="status">Status: Disconnected</div>
+<div id="messages"></div>
+
+<script>
+    const statusDiv = document.getElementById('status');
+    const messagesDiv = document.getElementById('messages');
+    let socket = null;
+    let pingInterval = null;
+
+    function connect() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            log("Уже подключены!");
+            return;
+        }
+
+        const userId = document.getElementById('userIdInput').value;
+        if (!userId) {
+            alert("Введите UserID!");
+            return;
+        }
+
+        // ЗАДАНИЕ 2: Передаем userId в URL
+        socket = new WebSocket(`ws://localhost:8086/ws/notifications?userId=${userId}`);
+
+        socket.onopen = function() {
+            statusDiv.textContent = `Status: Connected as ${userId}`;
+            statusDiv.style.color = 'green';
+            log('Соединение установлено');
+
+            // ЗАДАНИЕ 1: Запуск PING каждые 10 сек
+            startPing();
+        };
+
+        socket.onmessage = function(event) {
+            // Игнорируем PONG в визуальном чате (или логируем тихо)
+            if (event.data === "PONG") {
+                console.log("Server: PONG (Connection is alive)");
+                return;
+            }
+            log('Получено: ' + event.data, 'msg');
+        };
+
+        socket.onclose = function(event) {
+            statusDiv.textContent = 'Status: Disconnected';
+            statusDiv.style.color = 'red';
+            log('Отключение.');
+            stopPing();
+        };
+
+        socket.onerror = function(err) { log('Ошибка соединения'); };
+    }
+
+    function disconnect() {
+        if (socket) socket.close();
+    }
+
+    function startPing() {
+        // Шлем PING каждые 10 секунд
+        pingInterval = setInterval(() => {
+            if (socket.readyState === WebSocket.OPEN) {
+                console.log("Client: PING");
+                socket.send("PING");
+            }
+        }, 10000);
+    }
+
+    function stopPing() {
+        if (pingInterval) clearInterval(pingInterval);
+    }
+
+    function log(text, type = 'log') {
+        const div = document.createElement('div');
+        div.className = type;
+        div.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+        messagesDiv.appendChild(div);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+</script>
+</body>
+</html>

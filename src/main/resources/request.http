@@ -1,0 +1,14 @@
+### Отправить уведомление (Broadcast)
+POST http://localhost:8086/api/notifications/broadcast
+Content-Type: text/plain
+
+Привет, это тест из IDEA!
+
+### Личное сообщение для user1
+POST http://localhost:8086/api/notifications/private
+Content-Type: application/json
+
+{
+  "userId": "user1",
+  "message": "Вам начислена премия!"
+}
