@@ -18,8 +18,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        // Регистрируем наш хендлер по адресу /ws/notifications
         registry.addHandler(notificationHandler, "/ws/notifications")
-                .setAllowedOrigins("*"); // Разрешаем подключение с любых доменов (для тестов)
+                .setAllowedOrigins("*");
     }
 }

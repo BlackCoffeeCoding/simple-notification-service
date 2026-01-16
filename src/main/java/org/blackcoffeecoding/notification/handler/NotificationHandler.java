@@ -17,7 +17,6 @@ public class NotificationHandler extends TextWebSocketHandler {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationHandler.class);
 
-    // Список активных сессий
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
     @Override
@@ -28,12 +27,12 @@ public class NotificationHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
-        // ВОЗВРАЩАЕМ ПИНГЕР
+
         if ("PING".equalsIgnoreCase(message.getPayload())) {
             session.sendMessage(new TextMessage("PONG"));
             return;
         }
-        // Другие сообщения от клиента можно игнорировать или логировать
+
     }
 
     @Override
@@ -42,9 +41,6 @@ public class NotificationHandler extends TextWebSocketHandler {
         log.info("WebSocket соединение закрыто: {}", session.getId());
     }
 
-    /**
-     * Рассылка всем подключенным
-     */
     public void broadcast(String message) {
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
@@ -59,9 +55,6 @@ public class NotificationHandler extends TextWebSocketHandler {
         }
     }
 
-    /**
-     * Метод для контроллера (статистика)
-     */
     public int getActiveConnections() {
         return sessions.size();
     }
